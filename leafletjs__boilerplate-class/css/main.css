@@ -13,3 +13,6 @@ body {margin: 0; padding: 0;}
 .map-metadata__item-title{
     font-weight: bold;
 }
+#legend{
+    margin-top: 2rem;
+}

@@ -4,17 +4,17 @@ class Map {
     this.layers = null;
     this.sidebar = null;
 
-    this.options = { 
-      mapboxAccessToken: options.mapboxAccessToken || '<your mapbox api token>',
-      center:{
+    this.options = {
+      mapboxAccessToken: options.mapboxAccessToken || "<your mapbox api token>",
+      center: {
         lat: options.center.lat || 51.505,
         lng: options.center.lng || -0.09,
       },
       zoom: options.zoom || 14,
-      mapId: options.mapId || 'map'
+      mapId: options.mapId || "map",
     };
 
-    // call everything
+    // call initialize
     this.init();
   }
 
@@ -33,7 +33,10 @@ class Map {
    */
   initMap() {
     // create a map object
-    this.map = L.map(this.options.mapId).setView(this.options.center, this.options.zoom);
+    this.map = L.map(this.options.mapId).setView(
+      this.options.center,
+      this.options.zoom
+    );
     // add basemap tiles
     const tiles = this.addOSMTiles();
     // this.addMapboxTiles(<api token>, 'light-v10'); if you have a mapbox access token you can also used those instead
@@ -161,9 +164,81 @@ class Map {
 
   /**
    * Adds a marker, line, polygon, or geojson as a layer
-   * @param {*} leafletDataObject 
+   * @param {*} leafletDataObject
    */
-  addLayer(leafletDataObject){
-    this.layers.addLayer(leafletDataObject)
+  addLayer(leafletDataObject) {
+    this.layers.addLayer(leafletDataObject);
+  }
+
+  scaleData(geojson, options = null){
+    const values = geojson.features.map(
+      (feature) => feature.properties[options.field]
+    );
+    const min = d3.min(values);
+    const max = d3.max(values);
+
+    const legendDomain = [min, max];
+    const legendRange = options.legendRange
+      ? options.legendRange
+      : [
+          "rgb(0,100,100)",
+          "rgb(50,100,100)",
+          "rgb(100,100,100)",
+          "rgb(200,100,100)",
+          "rgb(255,100,100)",
+        ];
+
+    var quantize = d3.scaleQuantize().domain(legendDomain).range(legendRange);
+    return quantize;
+
+  }
+
+  /**
+   *
+   * @param {*} geojson
+   * @param {*} options: {
+   *    field: String - should be the name of property you are making a legend for,
+   *    legendTitle: String - should be title of your legend item,
+   *    legendRange: Array - should be an array of color values OR size values depending on how you have styled your data
+   * }
+   */
+  addLegend(legendScale, options = null) {
+    const legendContainer = d3.select("#legend");
+    const svg = legendContainer.append("svg");
+
+    svg
+      .append("g")
+      .attr("class", "legendQuant")
+      .attr("transform", "translate(10,10)");
+
+    let legend;
+    if (options.type === "color") {
+      legend = d3
+        .legendColor()
+        .labelFormat(d3.format(".2f"))
+        .useClass(false)
+        .title(options.title)
+        .titleWidth(100)
+        .scale(legendScale);
+    } else if (options.type === "size") {
+      legend = d3
+        .legendSize()
+        .shape("circle")
+        .shapePadding(5)
+        .labelFormat(d3.format(".2f"))
+        .title(options.title)
+        .titleWidth(100)
+        .scale(legendScale);
+    } else {
+      legend = d3
+        .legendColor()
+        .labelFormat(d3.format(".2f"))
+        .useClass(false)
+        .title(options.title)
+        .titleWidth(100)
+        .scale(legendScale);
+    }
+
+    svg.select(".legendQuant").call(legend);
   }
 }

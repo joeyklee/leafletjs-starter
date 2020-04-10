@@ -1,4 +1,4 @@
-let map;
+let app;
 // Where all the magic happens
 window.addEventListener("DOMContentLoaded", async () => {
   const options = {
@@ -13,18 +13,61 @@ window.addEventListener("DOMContentLoaded", async () => {
   // setup your map
   app = new Map(options);
 
-  // add data on top
+  /* ------------ Simple layers --------------- */
+  // Simple Layers: Add layers to your map - these are "simple layers"
   const marker = createMarker();
   const circle = createCircle();
   const line = createLine();
   const polygon = createPolygon();
-  const grid = createStyledGeoJSON();
-
+  // add those layers to the map
   app.addLayer(marker);
   app.addLayer(circle);
   app.addLayer(line);
   app.addLayer(polygon);
+  
+
+  /* ------------ More complex layers --------------- */
+  
+  /** 
+  * A choropleth map from geojson with a legend
+  */
+  // Step 1: define legend options
+  const legendOptions = {
+    field: "random",
+    legendRange: [
+      "rgb(0,100,100)",
+      "rgb(50,100,100)",
+      "rgb(100,100,100)",
+      "rgb(200,100,100)",
+      "rgb(255,100,100)",
+    ],
+  };
+  // Step 2: get or create your geojson data - usually you would request data 
+  const gridData = createGrid();
+  // Step 3: create your leaflet geojson layer
+  const grid = createStyledGeoJSON(gridData, legendOptions);
+  // Step 4: add your layer to the map
   app.addLayer(grid);
+  // Step 5: add your legend
+  app.addLegend( app.scaleData(gridData , legendOptions), {title:"random color", type: "color"});
+
+  /** 
+  * A proportional symbol map from geojson with a legend
+  */
+  // Step 1: define legend options
+  const legendOptionsSize = {
+    field: "random",
+    legendRange: [4, 6, 8, 10, 12],
+  };
+  // Step 2: get or create your geojson data - usually you would request data 
+  const randomPointData = createRandomPoints();
+  // Step 3: create your leaflet geojson layer
+  const randomPoints = createStyledGeoJSONPoints(randomPointData, legendOptionsSize);
+  // Step 4: add your layer to the map
+  app.addLayer(randomPoints);
+  // Step 5: add your legend
+  app.addLegend(app.scaleData(randomPointData, legendOptionsSize), {title:"point size", type: "size"});
+  
 });
 
 // ==================== data layer functions ============================== //
@@ -73,30 +116,9 @@ function createPolygon() {
 }
 
 /**
- * style a geojson based on a property
- */
-function createStyledGeoJSON() {
-  const squareGrid = createGrid();
-
-  return L.geoJSON(squareGrid, {
-    style: function (geojsonfeature) {
-      return {
-        fillColor: `rgb(${geojsonfeature.properties.random}, 100, 100)`,
-        fillOpacity: 1,
-        stroke: true,
-        color:"yellow"
-      };
-    },
-    onEachFeature: function (feature, layer) {
-      layer.bindPopup(`I have ${feature.properties.random} ideas for a new project`)
-    }
-  });
-}
-
-/**
  * create a grid using turf.js
  */
-function createGrid(){
+function createGrid() {
   const bbox = [
     -0.10394096374511719,
     51.499980636437265,
@@ -113,4 +135,69 @@ function createGrid(){
   });
 
   return squareGrid;
+}
+
+/**
+ * style a geojson based on a property
+ */
+function createStyledGeoJSON(polygonData, legendOptions) {
+  const scale = app.scaleData(polygonData, legendOptions);
+
+  return L.geoJSON(polygonData, {
+    style: function (geojsonfeature) {
+      return {
+        fillColor: scale(geojsonfeature.properties[legendOptions.field]),
+        fillOpacity: 1,
+        stroke: true,
+        color: "yellow",
+      };
+    },
+    onEachFeature: function (feature, layer) {
+      layer.bindPopup(
+        `I have ${feature.properties[legendOptions.field]} ideas for a new project`
+      );
+    },
+  });
+}
+
+/**
+ * create a grid using turf.js
+ */
+function createRandomPoints() {
+  const bbox = [
+    -0.1105499267578125,
+    51.489774195241196,
+    -0.09441375732421875,
+    51.49778991760289,
+  ];
+  const randomPoints = turf.randomPoint(50, { bbox: bbox });
+
+  randomPoints.features = randomPoints.features.map((feature) => {
+    feature.properties.random = Math.floor(Math.random() * 256);
+    return feature;
+  });
+
+  return randomPoints;
+}
+
+function createStyledGeoJSONPoints(pointData, legendOptions) {
+  const scale = app.scaleData(pointData, legendOptions);
+  
+  return L.geoJSON(pointData, {
+    pointToLayer: function (geoJsonPoint, latlng) {
+      return L.circle(latlng, scale(geoJsonPoint.properties[legendOptions.field]));
+    },
+    style: function (geojsonfeature) {
+      return {
+        fillColor: `red`,
+        fillOpacity: 1,
+        color:'red'
+      };
+    },
+    onEachFeature: function (feature, layer) {
+      layer.bindPopup(
+        `I have ${feature.properties[legendOptions.field]} ideas for a new project`
+      );
+    },
+  });
 }
