@@ -1,7 +1,7 @@
 # leafletjs starter
 > An (opinionated) template for building leafletjs applications. Prepared for [All Maps Lie 2020](https://all-maps-lie-2020.netlify.com/#/).
 
-![preview](assets/preview.png)
+![preview](/assets/preview.png)
 
 ## About
 
