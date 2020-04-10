@@ -1,6 +1,8 @@
 # leafletjs starter
 > An (opinionated) template for building leafletjs applications. Prepared for [All Maps Lie 2020](https://all-maps-lie-2020.netlify.com/#/).
 
+![preview](assets/preview.png)
+
 ## About
 
 The purpose of this map is to demo the important components to include on a  web map. This includes:
