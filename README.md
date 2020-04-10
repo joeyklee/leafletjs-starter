@@ -21,6 +21,25 @@ This map also includes basic support for:
 ## Audience 
 This template is designed for students who are just getting started with leaflet and web mapping. The idea is to provide as much boilerplate setup as possible so people can focus on the mapping concepts and map data.
 
+## Usage
+
+### Local development
+In your terminal or commandline:
+* 1: change directories to the project folder
+  ```sh
+  cd path/to/your/leafletjs-starter
+  ```
+* 2: start a local web server 
+  ```sh
+  python -m SimpleHTTPServer
+  ```
+go to: `http://localhost:8080`
+
+### Deployment
+
+The simplest thing to do is deploy it on [glitch.com](https://glitch.com/). Uploading from a Github repo is my recommended method, but you can also upload your files manually.
+
+
 ## TODOS
 
 * add categorical legend scale support -- right now it is only numeric
